@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # kongresni urad ljubljana / CD / Tivoli / Stozice / GR / Cela LJ
 
@@ -85,6 +86,8 @@ data[MONTH] = data[TIMESTAMP].dt.month
 data[WEEK] = data[TIMESTAMP].dt.isocalendar().week
 data[DOW] = data[TIMESTAMP].dt.dayofweek
 data[DOM] = data[TIMESTAMP].dt.day
+data[TIME] = data[TIMESTAMP].dt.time
+
 
 # merge weather data
 data = pd.merge_asof(data.sort_values(TIMESTAMP), weather.sort_values(TIMESTAMP), on=TIMESTAMP, direction='nearest')
@@ -96,4 +99,13 @@ data[WIND] = data [WIND_W]
 
 # remove unwanted columns
 data = data.drop(columns=[STATION_W, STATION_NAME_W, TIMESTAMP_W, TEMPERATURE_W, RAIN_W, WIND_W, TIMESTAMP])
+
+# 0 - ni padavin,  - 1 - prši, - 10 -rahle padavine, - 30 -padavine, 30 -> ... - močnepadavine  
+test = data[RAIN].apply(lambda x: 4 if x > 30
+                             else 3 if x > 10
+                             else 2 if x > 1
+                             else 1 if x > 0.1
+                             else 0)
+
+
 
