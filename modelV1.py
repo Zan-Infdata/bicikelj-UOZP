@@ -1,7 +1,5 @@
 from sklearn.linear_model import LinearRegression
 import pandas as pd
-import numpy as np
-import math
 
 from dataPreparation_cls import DataPreparation
 
@@ -14,6 +12,7 @@ SUFIX_30 = "_30min_ago"
 SUFIX_60 = "_60min_ago"
 SUFIX_90 = "_90min_ago"
 SUFIX_120 = "_120min_ago"
+SUFIX_MA = "_moving_average"
 
 
 
@@ -27,7 +26,9 @@ features = [
     DataPreparation.WIND,
     DataPreparation.RAIN,
     DataPreparation.HOUR,
-    DataPreparation.MINUTE
+    DataPreparation.MINUTE,
+    DataPreparation.SCHOOL_DAY,
+    DataPreparation.RUSH_HOUR
 ]
 
 # init model
@@ -49,11 +50,14 @@ for station in stations:
         station + SUFIX_30,
         station + SUFIX_60,
         station + SUFIX_90,
-        station + SUFIX_120,
+        station + SUFIX_120
     ]
+
+    
 
     features.extend(station_features)
 
+    print (features)
 
     # extract necessary data
     X = train_data.data[features]
@@ -70,8 +74,9 @@ for station in stations:
     data_out[station] = y_predict
 
     # remove station features for next station
-    features = features[:len(features)-5]
+    features = features[:len(features)-len(station_features)]
 
+train_data.toCsv()
 
 # round the data
 data_out = data_out.round(0)

@@ -40,8 +40,36 @@ class DataPreparation(object):
     RAIN = "rain"
     HOUR = "hour"
     MINUTE = "minute"
+    RUSH_HOUR = "is_rush_hour"
+    SCHOOL_DAY = "is_school_day"
+    MOVING_AVERAGE = "_moving_average"
+    MOVING_AVARAGES = []
 
 
+
+    HOLIDAYS = [
+        '2022-08-15'
+    ]
+
+    
+
+
+    def calculateMovingAverage(self):
+        for station in self.station_list:
+            col_name = station + self.MOVING_AVERAGE
+            self.MOVING_AVARAGES.append(col_name)
+
+            min_30 =  station + "_30min_ago"
+            min_60 =  station + "_60min_ago"
+            min_90 =  station + "_90min_ago"
+            min_120 = station + "_120min_ago"
+            
+            self.data[col_name] = ((self.data[min_30] - self.data[min_90]) + (self.data[min_60] - self.data[min_120]))/2
+            self.data[col_name] = self.data[col_name].round(0)
+
+            self.test[col_name] = ((self.data[min_30] - self.data[min_90]) + (self.data[min_60] - self.data[min_120]))/2
+            self.test[col_name] = self.test[col_name].round(0)
+            
 
 
 
@@ -123,6 +151,8 @@ class DataPreparation(object):
         self.data[self.DOM] = self.data[self.TIMESTAMP].dt.day
         self.data[self.HOUR] = self.data[self.TIMESTAMP].dt.hour
         self.data[self.MINUTE] = self.data[self.TIMESTAMP].dt.minute
+        self.data[self.RUSH_HOUR] = self.data[self.HOUR].apply(lambda x: 1 if 6 < x < 10 or 14 < x < 19 else 0)
+        self.data[self.SCHOOL_DAY] = self.data[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.weekday() < 5 else 0)
 
         # create custom features test
         self.test[self.YEAR] = self.test[self.TIMESTAMP].dt.year
@@ -132,8 +162,11 @@ class DataPreparation(object):
         self.test[self.DOM] = self.test[self.TIMESTAMP].dt.day
         self.test[self.HOUR] = self.test[self.TIMESTAMP].dt.hour
         self.test[self.MINUTE] = self.test[self.TIMESTAMP].dt.minute
-
+        self.test[self.RUSH_HOUR] = self.test[self.HOUR].apply(lambda x: 1 if 6 < x < 10 or 14 < x < 19 else 0)
+        self.test[self.SCHOOL_DAY] = self.test[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.weekday() < 5 else 0)
   
+        # calculate moving average
+        self.calculateMovingAverage()
 
         # merge weather data
         self.data = pd.merge_asof(left=self.data.sort_values(self.TIMESTAMP), right=self.weather.sort_values(self.TIMESTAMP), on=self.TIMESTAMP, direction='nearest')
