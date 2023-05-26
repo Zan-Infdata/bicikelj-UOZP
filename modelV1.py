@@ -69,12 +69,12 @@ for station in stations:
 
 
     # extract necessary data
-    X = train_data.data_1h[features]
+    X = train_data.data[features]
 
     X_predict = X_1_hour[features]    
 
 
-    lr.fit(X, train_data.data_1h[station])
+    lr.fit(X, train_data.data[station])
     
     y_1h_predict = lr.predict(X_predict)
 
@@ -96,12 +96,12 @@ for station in stations:
 
 
     # extract necessary data
-    X = train_data.data_2h[features]
+    X = train_data.data[features]
 
     X_predict = X_2_hour[features]    
 
 
-    lr.fit(X, train_data.data_2h[station])
+    lr.fit(X, train_data.data[station])
     
     y_2h_predict = lr.predict(X_predict)
 
@@ -119,7 +119,6 @@ for station in stations:
 
 bar.finish()
 
-train_data.toCsv()
 
 # round the data
 data_out = data_out.round(0)

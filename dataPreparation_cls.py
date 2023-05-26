@@ -18,8 +18,6 @@ class DataPreparation(object):
     test_timestams = None
     weather = None
     station_list = []
-    data_1h = None
-    data_2h = None
 
     
     # constants
@@ -302,21 +300,25 @@ class DataPreparation(object):
                                   self.TIMESTAMP_120,
                                   ])
 
-        
+
+
         # remove starting data
-        self.data_1h = self.data.tail(-12)
-        self.test_1h = self.test.tail(-12)
+        self.data = self.data.tail(-24)
 
-        self.data_2h = self.data.tail(-24)
-        self.test_2h = self.test.tail(-24)
+        # TODO: add loading bars
 
-            
+        inx = 1
+
+        while inx < len(self.data):
+            if self.data.iloc[inx][self.TIMESTAMP] - self.data.iloc[inx-1][self.TIMESTAMP] > pd.Timedelta('2 hour'):
+                self.data = self.data.drop(self.data.index[inx:inx+24])
+            inx += 1
+        
+
 
 
     def toCsv(self):
         
-        self.data_1h.to_csv(self.filepath+"_data1h.csv",index=False, date_format='%Y-%m-%d %H:%M:%S', encoding="utf-8", sep=";")
-        self.data_2h.to_csv(self.filepath+"_data2h.csv",index=False, date_format='%Y-%m-%d %H:%M:%S', encoding="utf-8", sep=";")
         self.data.to_csv(self.filepath+"_data.csv",index=False, date_format='%Y-%m-%d %H:%M:%S', encoding="utf-8", sep=";")
         self.test.to_csv(self.filepath+"_test.csv",index=False, date_format='%Y-%m-%d %H:%M:%S', encoding="utf-8", sep=";")
 
