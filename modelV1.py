@@ -1,4 +1,4 @@
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso
 import pandas as pd
 import numpy as np
 from progress.bar import PixelBar
@@ -31,7 +31,7 @@ features.extend(DataPreparation.IS_HOUR)
 features.extend(DataPreparation.IS_DAY)
 
 # init model
-lr = LinearRegression()
+lr = Lasso(alpha=0.005)
 
 # prepare data
 train_data = DataPreparation()
