@@ -1,5 +1,10 @@
 import pandas as pd
 
+"""
+dej vn rush hour pa wind tut ne rabmo. Nej se sam nauči kdaj je rush hour. Usaka ura po sebi. Dva razlicna modela probat. Minut ne rabs, time of day nerabs. Is monday, is tuesday...
+ponuci regularizacio
+"""
+
 # 0 - ni padavin,  - 1 - prši, - 10 -rahle padavine, - 30 -padavine, 30 -> ... - močnepadavine  
 
 # kongresni urad ljubljana / CD / Tivoli / Stozice / GR / Cela LJ
@@ -13,6 +18,8 @@ class DataPreparation(object):
     test_timestams = None
     weather = None
     station_list = []
+    data_1h = None
+    data_2h = None
 
     
     # constants
@@ -42,8 +49,48 @@ class DataPreparation(object):
     MINUTE = "minute"
     RUSH_HOUR = "is_rush_hour"
     SCHOOL_DAY = "is_school_day"
+    WEEKEND = "is_weekend"
+    TOD = "time_of_day"
     MOVING_AVERAGE = "_moving_average"
     MOVING_AVARAGES = []
+
+    IS_HOUR = [
+        "is_1",
+        "is_2",
+        "is_3",
+        "is_4",
+        "is_5",
+        "is_6",
+        "is_7",
+        "is_8",
+        "is_9",
+        "is_10",
+        "is_11",
+        "is_12",
+        "is_13",
+        "is_14",
+        "is_15",
+        "is_16",
+        "is_17",
+        "is_18",
+        "is_19",
+        "is_20",
+        "is_21",
+        "is_22",
+        "is_23",
+        "is_24"
+    ]
+
+
+    IS_DAY = [
+        "is_monday",
+        "is_tuesday",
+        "is_wednesday",
+        "is_thursday",
+        "is_friday",
+        "is_saturday",
+        "is_sunday",
+    ]
 
 
 
@@ -64,13 +111,30 @@ class DataPreparation(object):
             min_90 =  station + "_90min_ago"
             min_120 = station + "_120min_ago"
             
-            self.data[col_name] = ((self.data[min_30] - self.data[min_90]) + (self.data[min_60] - self.data[min_120]))/2
+            self.data[col_name] = ((self.data[min_30] - self.data[min_90]) + (self.data[min_60] - self.data[min_120]) + (self.data[station]- self.data[min_60]))/3
             self.data[col_name] = self.data[col_name].round(0)
 
-            self.test[col_name] = ((self.data[min_30] - self.data[min_90]) + (self.data[min_60] - self.data[min_120]))/2
+            self.test[col_name] = ((self.data[min_30] - self.data[min_90]) + (self.data[min_60] - self.data[min_120]) + (self.data[station]- self.data[min_60]))/3
             self.test[col_name] = self.test[col_name].round(0)
             
 
+
+    def transformHourData(self):
+
+        hr = 0
+        for hour in self.IS_HOUR:
+            hr += 1
+            self.data[hour] = self.data[self.HOUR].apply(lambda x: 1 if x == hr else 0)
+            self.test[hour] = self.test[self.HOUR].apply(lambda x: 1 if x == hr else 0)    
+
+
+
+    def transformDayData(self):
+        dy = 0
+        for day in self.IS_DAY:
+            self.data[day] = self.data[self.DOW].apply(lambda x: 1 if x == dy else 0)
+            self.test[day] = self.test[self.DOW].apply(lambda x: 1 if x == dy else 0)
+            dy += 1
 
 
 
@@ -153,6 +217,11 @@ class DataPreparation(object):
         self.data[self.MINUTE] = self.data[self.TIMESTAMP].dt.minute
         self.data[self.RUSH_HOUR] = self.data[self.HOUR].apply(lambda x: 1 if 6 < x < 10 or 14 < x < 19 else 0)
         self.data[self.SCHOOL_DAY] = self.data[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.weekday() < 5 else 0)
+        self.data[self.WEEKEND] = self.data[self.DOW].apply(lambda x: 1 if x > 4 else 0)
+        self.data[self.TOD] = self.data[self.HOUR].apply(lambda x:   0 if 5 < x < 12 
+                                                                else 1 if 11 < x < 18 
+                                                                else 2 if 17 < x < 24 
+                                                                else -1) 
 
         # create custom features test
         self.test[self.YEAR] = self.test[self.TIMESTAMP].dt.year
@@ -164,9 +233,19 @@ class DataPreparation(object):
         self.test[self.MINUTE] = self.test[self.TIMESTAMP].dt.minute
         self.test[self.RUSH_HOUR] = self.test[self.HOUR].apply(lambda x: 1 if 6 < x < 10 or 14 < x < 19 else 0)
         self.test[self.SCHOOL_DAY] = self.test[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.weekday() < 5 else 0)
+        self.test[self.WEEKEND] = self.test[self.DOW].apply(lambda x: 1 if x > 4 else 0)
+        self.test[self.TOD] = self.test[self.HOUR].apply(lambda x:   0 if 5 < x < 12 
+                                                                else 1 if 11 < x < 18 
+                                                                else 2 if 17 < x < 24 
+                                                                else -1) 
   
+
+        self.transformDayData()
+        self.transformHourData()
+
+
         # calculate moving average
-        self.calculateMovingAverage()
+        #self.calculateMovingAverage()
 
         # merge weather data
         self.data = pd.merge_asof(left=self.data.sort_values(self.TIMESTAMP), right=self.weather.sort_values(self.TIMESTAMP), on=self.TIMESTAMP, direction='nearest')
@@ -208,7 +287,8 @@ class DataPreparation(object):
                                   self.TIMESTAMP_30,
                                   self.TIMESTAMP_60,
                                   self.TIMESTAMP_90,
-                                  self.TIMESTAMP_120])
+                                  self.TIMESTAMP_120,
+                                  ])
         
         
         self.test = self.test.drop(columns=[self.STATION_W,
@@ -221,12 +301,24 @@ class DataPreparation(object):
                                   self.TIMESTAMP_30,
                                   self.TIMESTAMP_60,
                                   self.TIMESTAMP_90,
-                                  self.TIMESTAMP_120])
+                                  self.TIMESTAMP_120,
+                                  ])
+
+        
+        # remove starting data
+        self.data_1h = self.data.tail(-12)
+        self.test_1h = self.test.tail(-12)
+
+        self.data_2h = self.data.tail(-24)
+        self.test_2h = self.test.tail(-24)
+
 
 
 
     def toCsv(self):
         
+        self.data_1h.to_csv(self.filepath+"_data1h.csv",index=False, date_format='%Y-%m-%d %H:%M:%S', encoding="utf-8", sep=";")
+        self.data_2h.to_csv(self.filepath+"_data2h.csv",index=False, date_format='%Y-%m-%d %H:%M:%S', encoding="utf-8", sep=";")
         self.data.to_csv(self.filepath+"_data.csv",index=False, date_format='%Y-%m-%d %H:%M:%S', encoding="utf-8", sep=";")
         self.test.to_csv(self.filepath+"_test.csv",index=False, date_format='%Y-%m-%d %H:%M:%S', encoding="utf-8", sep=";")
 
