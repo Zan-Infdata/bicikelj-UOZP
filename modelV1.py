@@ -20,20 +20,11 @@ SUFIX_MA = "_moving_average"
 
 
 features = [
-    #DataPreparation.YEAR,
-    #DataPreparation.MONTH,
-    #DataPreparation.WEEK,
-    #DataPreparation.DOW,
-    #DataPreparation.DOM,
-    #DataPreparation.TEMPERATURE,
-    #DataPreparation.WIND,
-    #DataPreparation.RAIN,
-    #DataPreparation.HOUR,
-    #DataPreparation.MINUTE,
+    DataPreparation.TEMPERATURE,
+    DataPreparation.WIND,
     DataPreparation.SCHOOL_DAY,
     DataPreparation.RUSH_HOUR,
     DataPreparation.WEEKEND,
-    #DataPreparation.TOD
 ]
 
 features.extend(DataPreparation.IS_HOUR)

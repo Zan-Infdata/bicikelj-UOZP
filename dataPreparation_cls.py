@@ -283,7 +283,6 @@ class DataPreparation(object):
                                   self.TEMPERATURE_W,
                                   self.RAIN_W,
                                   self.WIND_W,
-                                  self.TIMESTAMP,
                                   self.TIMESTAMP_30,
                                   self.TIMESTAMP_60,
                                   self.TIMESTAMP_90,
@@ -297,7 +296,6 @@ class DataPreparation(object):
                                   self.TEMPERATURE_W,
                                   self.RAIN_W,
                                   self.WIND_W,
-                                  self.TIMESTAMP,
                                   self.TIMESTAMP_30,
                                   self.TIMESTAMP_60,
                                   self.TIMESTAMP_90,
@@ -312,7 +310,7 @@ class DataPreparation(object):
         self.data_2h = self.data.tail(-24)
         self.test_2h = self.test.tail(-24)
 
-
+            
 
 
     def toCsv(self):
