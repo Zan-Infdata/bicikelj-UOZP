@@ -1,4 +1,5 @@
 import pandas as pd
+from progress.bar import PixelBar
 
 """
 dej vn rush hour pa wind tut ne rabmo. Nej se sam nauči kdaj je rush hour. Usaka ura po sebi. Dva razlicna modela probat. Minut ne rabs, time of day nerabs. Is monday, is tuesday...
@@ -181,7 +182,7 @@ class DataPreparation(object):
         self.test[self.TIMESTAMP] = pd.to_datetime(self.test[self.TIMESTAMP])
         self.weather[self.TIMESTAMP] = pd.to_datetime(self.weather[self.TIMESTAMP_W])
 
-        
+
 
 
         # add data about bikes 30, 60, 90, 120 min ago
@@ -305,7 +306,8 @@ class DataPreparation(object):
         # remove starting data
         self.data = self.data.tail(-24)
 
-        # TODO: add loading bars
+        # bar init
+        bar = PixelBar("Preparing data:                ", max=7258)
 
         inx = 1
 
@@ -313,7 +315,9 @@ class DataPreparation(object):
             if self.data.iloc[inx][self.TIMESTAMP] - self.data.iloc[inx-1][self.TIMESTAMP] > pd.Timedelta('2 hour'):
                 self.data = self.data.drop(self.data.index[inx:inx+24])
             inx += 1
+            bar.next()
         
+        bar.finish()
 
 
 
