@@ -2,10 +2,6 @@ import pandas as pd
 from progress.bar import PixelBar
 
 
-# 0 - ni padavin,  - 1 - prši, - 10 -rahle padavine, - 30 -padavine, 30 -> ... - močnepadavine  
-
-# kongresni urad ljubljana / CD / Tivoli / Stozice / GR / Cela LJ
-
 class DataPreparation(object):
 
         
