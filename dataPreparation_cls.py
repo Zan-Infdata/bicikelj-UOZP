@@ -47,8 +47,6 @@ class DataPreparation(object):
     WEEKEND = "is_weekend"
     TOD = "time_of_day"
     HOLIDAY = "is_holiday"
-    MOVING_AVERAGE = "_moving_average"
-    MOVING_AVARAGES = []
 
     IS_HOUR = [
         "is_1",
@@ -93,25 +91,6 @@ class DataPreparation(object):
     HOLIDAYS = [
         '2022-08-15'
     ]
-
-    
-
-
-    def calculateMovingAverage(self):
-        for station in self.station_list:
-            col_name = station + self.MOVING_AVERAGE
-            self.MOVING_AVARAGES.append(col_name)
-
-            min_30 =  station + "_30min_ago"
-            min_60 =  station + "_60min_ago"
-            min_90 =  station + "_90min_ago"
-            min_120 = station + "_120min_ago"
-            
-            self.data[col_name] = ((self.data[min_30] - self.data[min_90]) + (self.data[min_60] - self.data[min_120]) + (self.data[station]- self.data[min_60]))/3
-            self.data[col_name] = self.data[col_name].round(0)
-
-            self.test[col_name] = ((self.data[min_30] - self.data[min_90]) + (self.data[min_60] - self.data[min_120]) + (self.data[station]- self.data[min_60]))/3
-            self.test[col_name] = self.test[col_name].round(0)
             
 
 
@@ -144,14 +123,12 @@ class DataPreparation(object):
 
 
     def cleanUpDuplicates(self):
-        self.data = self.data.drop([col for col in self.data.columns if col.endswith('ago_30min_ago')], axis=1)
         self.data = self.data.drop([col for col in self.data.columns if col.endswith('ago_60min_ago')], axis=1)
         self.data = self.data.drop([col for col in self.data.columns if col.endswith('ago_90min_ago')], axis=1)
         self.data = self.data.drop([col for col in self.data.columns if col.endswith('ago_120min_ago')], axis=1)
 
         self.data = self.data.loc[:,~self.data.columns.duplicated()]
 
-        self.test = self.test.drop([col for col in self.test.columns if col.endswith('ago_30min_ago')], axis=1)
         self.test = self.test.drop([col for col in self.test.columns if col.endswith('ago_60min_ago')], axis=1)
         self.test = self.test.drop([col for col in self.test.columns if col.endswith('ago_90min_ago')], axis=1)
         self.test = self.test.drop([col for col in self.test.columns if col.endswith('ago_120min_ago')], axis=1)
@@ -182,20 +159,17 @@ class DataPreparation(object):
 
 
 
-        # add data about bikes 30, 60, 90, 120 min ago
-        self.data[self.TIMESTAMP_30] = self.data[self.TIMESTAMP] - pd.Timedelta('30 min')
+        # add data about bikes 60, 90, 120 min ago
         self.data[self.TIMESTAMP_60] = self.data[self.TIMESTAMP] - pd.Timedelta('60 min')
         self.data[self.TIMESTAMP_90] = self.data[self.TIMESTAMP] - pd.Timedelta('90 min')
         self.data[self.TIMESTAMP_120] = self.data[self.TIMESTAMP] - pd.Timedelta('120 min')
 
 
-        self.test[self.TIMESTAMP_30] = self.test[self.TIMESTAMP] - pd.Timedelta('30 min')
         self.test[self.TIMESTAMP_60] = self.test[self.TIMESTAMP] - pd.Timedelta('60 min')
         self.test[self.TIMESTAMP_90] = self.test[self.TIMESTAMP] - pd.Timedelta('90 min')
         self.test[self.TIMESTAMP_120] = self.test[self.TIMESTAMP] - pd.Timedelta('120 min')
 
 
-        self.addHistoryData(self.TIMESTAMP_30)
         self.addHistoryData(self.TIMESTAMP_60)
         self.addHistoryData(self.TIMESTAMP_90)
         self.addHistoryData(self.TIMESTAMP_120)
@@ -204,46 +178,23 @@ class DataPreparation(object):
 
 
         # create custom features data
-        self.data[self.YEAR] = self.data[self.TIMESTAMP].dt.year
-        self.data[self.MONTH] = self.data[self.TIMESTAMP].dt.month
-        self.data[self.WEEK] = self.data[self.TIMESTAMP].dt.isocalendar().week
         self.data[self.DOW] = self.data[self.TIMESTAMP].dt.dayofweek
-        self.data[self.DOM] = self.data[self.TIMESTAMP].dt.day
         self.data[self.HOUR] = self.data[self.TIMESTAMP].dt.hour
-        self.data[self.MINUTE] = self.data[self.TIMESTAMP].dt.minute
-        self.data[self.RUSH_HOUR] = self.data[self.HOUR].apply(lambda x: 1 if 6 < x < 10 or 14 < x < 19 else 0)
         self.data[self.HOLIDAY] = self.data[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.month == 8 else 0)
-        self.data[self.SCHOOL_DAY] = self.data[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.weekday() < 5 else 0)
         self.data[self.WEEKEND] = self.data[self.DOW].apply(lambda x: 1 if x > 4 else 0)
-        self.data[self.TOD] = self.data[self.HOUR].apply(lambda x:   0 if 5 < x < 12 
-                                                                else 1 if 11 < x < 18 
-                                                                else 2 if 17 < x < 24 
-                                                                else -1) 
+
 
         # create custom features test
-        self.test[self.YEAR] = self.test[self.TIMESTAMP].dt.year
-        self.test[self.MONTH] = self.test[self.TIMESTAMP].dt.month
-        self.test[self.WEEK] = self.test[self.TIMESTAMP].dt.isocalendar().week
         self.test[self.DOW] = self.test[self.TIMESTAMP].dt.dayofweek
-        self.test[self.DOM] = self.test[self.TIMESTAMP].dt.day
         self.test[self.HOUR] = self.test[self.TIMESTAMP].dt.hour
-        self.test[self.MINUTE] = self.test[self.TIMESTAMP].dt.minute
-        self.test[self.RUSH_HOUR] = self.test[self.HOUR].apply(lambda x: 1 if 6 < x < 10 or 14 < x < 19 else 0)
         self.test[self.HOLIDAY] = self.test[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.month == 8 else 0)
-        self.test[self.SCHOOL_DAY] = self.test[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.weekday() < 5 else 0)
         self.test[self.WEEKEND] = self.test[self.DOW].apply(lambda x: 1 if x > 4 else 0)
-        self.test[self.TOD] = self.test[self.HOUR].apply(lambda x:   0 if 5 < x < 12 
-                                                                else 1 if 11 < x < 18 
-                                                                else 2 if 17 < x < 24 
-                                                                else -1) 
+
   
 
         self.transformDayData()
         self.transformHourData()
 
-
-        # calculate moving average
-        #self.calculateMovingAverage()
 
         # merge weather data
         self.data = pd.merge_asof(left=self.data.sort_values(self.TIMESTAMP), right=self.weather.sort_values(self.TIMESTAMP), on=self.TIMESTAMP, direction='nearest')
@@ -255,12 +206,10 @@ class DataPreparation(object):
         # rename all weather data
         self.data[self.TEMPERATURE] = self.data[self.TEMPERATURE_W]
         self.data[self.RAIN] = self.data [self.RAIN_W].apply(lambda x: 0 if x != x else x)
-        self.data[self.WIND] = self.data [self.WIND_W].apply(lambda x: 0 if x != x else x)
 
         self.test[self.TEMPERATURE] = self.test[self.TEMPERATURE_W]
         self.test[self.RAIN] = self.test [self.RAIN_W].apply(lambda x: 0 if x != x else x)
-        self.test[self.WIND] = self.test [self.WIND_W].apply(lambda x: 0 if x != x else x)
-        
+
 
         # remove unwanted columns
         self.data = self.data.drop(columns=[self.STATION_W,
@@ -269,7 +218,6 @@ class DataPreparation(object):
                                   self.TEMPERATURE_W,
                                   self.RAIN_W,
                                   self.WIND_W,
-                                  self.TIMESTAMP_30,
                                   self.TIMESTAMP_60,
                                   self.TIMESTAMP_90,
                                   self.TIMESTAMP_120,
@@ -282,7 +230,6 @@ class DataPreparation(object):
                                   self.TEMPERATURE_W,
                                   self.RAIN_W,
                                   self.WIND_W,
-                                  self.TIMESTAMP_30,
                                   self.TIMESTAMP_60,
                                   self.TIMESTAMP_90,
                                   self.TIMESTAMP_120,
