@@ -254,25 +254,13 @@ class DataPreparation(object):
 
         # rename all weather data
         self.data[self.TEMPERATURE] = self.data[self.TEMPERATURE_W]
-        self.data[self.RAIN] = self.data [self.RAIN_W]
+        self.data[self.RAIN] = self.data [self.RAIN_W].apply(lambda x: 0 if x != x else x)
         self.data[self.WIND] = self.data [self.WIND_W].apply(lambda x: 0 if x != x else x)
 
         self.test[self.TEMPERATURE] = self.test[self.TEMPERATURE_W]
-        self.test[self.RAIN] = self.test [self.RAIN_W]
+        self.test[self.RAIN] = self.test [self.RAIN_W].apply(lambda x: 0 if x != x else x)
         self.test[self.WIND] = self.test [self.WIND_W].apply(lambda x: 0 if x != x else x)
-
-        # group rain data to 5 groups
-        self.data[self.RAIN] = self.data[self.RAIN].apply( lambda x: 4 if x > 30
-                                                                else 3 if x > 10
-                                                                else 2 if x > 1
-                                                                else 1 if x > 0.1
-                                                                else 0)
         
-        self.test[self.RAIN] = self.test[self.RAIN].apply( lambda x: 4 if x > 30
-                                                                else 3 if x > 10
-                                                                else 2 if x > 1
-                                                                else 1 if x > 0.1
-                                                                else 0)
 
         # remove unwanted columns
         self.data = self.data.drop(columns=[self.STATION_W,
