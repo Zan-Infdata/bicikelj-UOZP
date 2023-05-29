@@ -1,10 +1,6 @@
 import pandas as pd
 from progress.bar import PixelBar
 
-"""
-dej vn rush hour pa wind tut ne rabmo. Nej se sam nauči kdaj je rush hour. Usaka ura po sebi. Dva razlicna modela probat. Minut ne rabs, time of day nerabs. Is monday, is tuesday...
-ponuci regularizacio
-"""
 
 # 0 - ni padavin,  - 1 - prši, - 10 -rahle padavine, - 30 -padavine, 30 -> ... - močnepadavine  
 
@@ -50,6 +46,7 @@ class DataPreparation(object):
     SCHOOL_DAY = "is_school_day"
     WEEKEND = "is_weekend"
     TOD = "time_of_day"
+    HOLIDAY = "is_holiday"
     MOVING_AVERAGE = "_moving_average"
     MOVING_AVARAGES = []
 
@@ -215,6 +212,7 @@ class DataPreparation(object):
         self.data[self.HOUR] = self.data[self.TIMESTAMP].dt.hour
         self.data[self.MINUTE] = self.data[self.TIMESTAMP].dt.minute
         self.data[self.RUSH_HOUR] = self.data[self.HOUR].apply(lambda x: 1 if 6 < x < 10 or 14 < x < 19 else 0)
+        self.data[self.HOLIDAY] = self.data[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.month == 8 else 0)
         self.data[self.SCHOOL_DAY] = self.data[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.weekday() < 5 else 0)
         self.data[self.WEEKEND] = self.data[self.DOW].apply(lambda x: 1 if x > 4 else 0)
         self.data[self.TOD] = self.data[self.HOUR].apply(lambda x:   0 if 5 < x < 12 
@@ -231,6 +229,7 @@ class DataPreparation(object):
         self.test[self.HOUR] = self.test[self.TIMESTAMP].dt.hour
         self.test[self.MINUTE] = self.test[self.TIMESTAMP].dt.minute
         self.test[self.RUSH_HOUR] = self.test[self.HOUR].apply(lambda x: 1 if 6 < x < 10 or 14 < x < 19 else 0)
+        self.test[self.HOLIDAY] = self.test[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.month == 8 else 0)
         self.test[self.SCHOOL_DAY] = self.test[self.TIMESTAMP].dt.date.apply(lambda x: 1 if str(x) in self.HOLIDAYS or x.weekday() < 5 else 0)
         self.test[self.WEEKEND] = self.test[self.DOW].apply(lambda x: 1 if x > 4 else 0)
         self.test[self.TOD] = self.test[self.HOUR].apply(lambda x:   0 if 5 < x < 12 
@@ -310,7 +309,7 @@ class DataPreparation(object):
         bar = PixelBar("Preparing data:                ", max=7258)
 
         inx = 1
-
+        # remove unusable data
         while inx < len(self.data):
             if self.data.iloc[inx][self.TIMESTAMP] - self.data.iloc[inx-1][self.TIMESTAMP] > pd.Timedelta('2 hour'):
                 self.data = self.data.drop(self.data.index[inx:inx+24])

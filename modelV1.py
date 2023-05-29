@@ -21,17 +21,17 @@ SUFIX_MA = "_moving_average"
 
 features = [
     DataPreparation.TEMPERATURE,
-    DataPreparation.WIND,
-    DataPreparation.SCHOOL_DAY,
-    DataPreparation.RUSH_HOUR,
+    DataPreparation.HOLIDAY,
     DataPreparation.WEEKEND,
+    DataPreparation.RAIN
 ]
 
 features.extend(DataPreparation.IS_HOUR)
 features.extend(DataPreparation.IS_DAY)
 
+
 # init model
-lr = Lasso(alpha=0.005)
+lr = Lasso(alpha=0.001)
 
 # prepare data
 train_data = DataPreparation()
